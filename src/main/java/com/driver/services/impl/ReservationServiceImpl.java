@@ -21,8 +21,67 @@ public class ReservationServiceImpl implements ReservationService {
     ReservationRepository reservationRepository3;
     @Autowired
     ParkingLotRepository parkingLotRepository3;
+
     @Override
     public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
+        User user;
+        ParkingLot parkingLot;
+        Spot spot = null;
 
+        String wheeler;
+        if (numberOfWheels == 2) {  // <= why?
+            wheeler = "TWO_WHEELER";
+        } else if (numberOfWheels == 4) {   // <= why?
+            wheeler = "FOUR_WHEELER";
+        } else {
+            wheeler = "OTHERS";
+        }
+
+        int totalCost = Integer.MAX_VALUE;
+        boolean marker = true;
+
+        try {
+            user = userRepository3.findById(userId).get();
+            parkingLot = parkingLotRepository3.findById(parkingLotId).get();
+            for (Spot s : parkingLot.getSpotList()) {
+                int wheels = getWheelerType(s.getSpotType());
+                if (!s.isOccupied() && s.getPricePerHour() < totalCost && s.getSpotType().equals(SpotType.valueOf(wheeler))) {
+                    totalCost = s.getPricePerHour();
+                    spot = s;
+                    marker = false;
+                }
+            }
+            if (marker) {
+                throw new Exception();
+            }
+        } catch (Exception e) {
+            throw new Exception("Cannot make reservation");
+        }
+
+        Reservation reservation = new Reservation();
+        reservation.setNumberOfHours(timeInHours);
+
+        user.getReservationList().add(reservation);
+        reservation.setUser(user);
+
+        spot.setOccupied(true);
+        spot.getReservationList().add(reservation);
+        reservation.setSpot(spot);
+
+        parkingLot.getSpotList().add(spot);
+
+        userRepository3.save(user);
+        spotRepository3.save(spot);
+
+
+        return reservation;
+    }
+    private int getWheelerType(SpotType spotType){
+        if(spotType.equals(SpotType.TWO_WHEELER)){
+            return 2;
+        } else if (spotType.equals(SpotType.FOUR_WHEELER)) {
+            return 4;
+        }
+        return Integer.MAX_VALUE;
     }
 }
