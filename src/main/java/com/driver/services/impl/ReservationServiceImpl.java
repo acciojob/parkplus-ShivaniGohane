@@ -45,7 +45,7 @@ public class ReservationServiceImpl implements ReservationService {
             parkingLot = parkingLotRepository3.findById(parkingLotId).get();
             for (Spot s : parkingLot.getSpotList()) {
                 int wheels = getWheelerType(s.getSpotType());
-                if (!s.isOccupied() && s.getPricePerHour() < totalCost && s.getSpotType().equals(SpotType.valueOf(wheeler))) {
+                if (!s.getOccupied() && s.getPricePerHour() < totalCost && s.getSpotType().equals(SpotType.valueOf(wheeler))) {
                     totalCost = s.getPricePerHour();
                     spot = s;
                     marker = false;
